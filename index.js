@@ -49,6 +49,7 @@ async function run() {
   try {
     const petCollection = client.db('petsDB').collection('pets')
     const donationCollection = client.db('petsDB').collection('donations')
+    const usersCollection = client.db('petsDB').collection('users')
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -79,7 +80,12 @@ async function run() {
 
     // adoption request
 
-
+    // users 
+    app.post('/users', async(req,res)=>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user)
+      res.send(result)
+    })
 
 
 
