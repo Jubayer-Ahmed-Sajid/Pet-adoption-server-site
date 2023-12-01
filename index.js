@@ -78,6 +78,12 @@ async function run() {
       const result = await petCollection.findOne(query)
       res.send(result)
     })
+    app.get('/addedpets',async(req,res)=>{
+      const email = req.query?.email
+      console.log('email is',email)
+      const result = await petCollection.find({email}).toArray()
+      res.send(result)
+    })
 
     app.delete('/pets/:id', async (req, res) => {
       const id = req.params
@@ -104,7 +110,7 @@ async function run() {
       res.send(result)
     })
 
-    
+
     app.post('/donations', async (req,res)=>{
       const campaign = req.body
       const result = await donationCollection.insertOne(campaign)
