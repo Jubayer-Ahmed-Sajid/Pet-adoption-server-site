@@ -61,9 +61,9 @@ async function run() {
       console.log('the token is ', token)
       res.send({ token })
     })
-    // pets function
+    // pets apis
 
-    app.get('/pets', verifyToken, async (req, res) => {
+    app.get('/pets', async (req, res) => {
       const result = await petCollection.find().toArray()
       res.send(result)
     })
@@ -73,21 +73,63 @@ async function run() {
       const result = await petCollection.findOne(query)
       res.send(result)
     })
+    app.delete('/pets/:id', async (req, res) => {
+      const id = req.params
+      const query = { _id: new ObjectId(id) }
+      const result = await petCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.patch('/pets/admin/:id', async (req, res) => {
+      const id = req.params
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set:{
+          adopted:true
+        }
+      }
+      const result = await petCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
+
+
+    // Donation apis
     app.get('/donations', async (req, res) => {
       const result = await donationCollection.find().toArray()
       res.send(result)
     })
 
-    // adoption request
+    // adoption request apis
 
-    // users 
-    app.post('/users', async(req,res)=>{
+
+
+    // users apis
+    app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user)
       res.send(result)
     })
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
 
-
+    app.patch('/users/admin/:id', verifyToken, async (req, res) => {
+      const id = req.params;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          isAdmin: true
+        }
+      }
+      const result = await  usersCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
+    app.delete('/users/:id', verifyToken,async(req,res)=>{
+      const id = req.params
+      const query = {_id: new ObjectId(id)}
+      const result = await usersCollection.deleteOne(query)
+      res.send(result)
+    })
 
   } finally {
 
