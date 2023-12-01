@@ -104,6 +104,13 @@ async function run() {
       res.send(result)
     })
 
+    
+    app.post('/donations', async (req,res)=>{
+      const campaign = req.body
+      const result = await donationCollection.insertOne(campaign)
+      res.send(result)
+    })
+
     // adoption request apis
 
 
