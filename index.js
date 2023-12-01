@@ -67,12 +67,18 @@ async function run() {
       const result = await petCollection.find().toArray()
       res.send(result)
     })
+    app.post('/pets', async(req,res)=>{
+      const pet = req.body
+      const result = await petCollection.insertOne(pet)
+      res.send(result)
+    })
     app.get('/pets/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await petCollection.findOne(query)
       res.send(result)
     })
+
     app.delete('/pets/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
