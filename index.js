@@ -80,7 +80,7 @@ async function run() {
     })
     app.get('/addedpets',async(req,res)=>{
       const email = req.query?.email
-      console.log('email is',email)
+      console.log('email is', email)
       const result = await petCollection.find({email}).toArray()
       res.send(result)
     })
