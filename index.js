@@ -50,6 +50,7 @@ async function run() {
     const petCollection = client.db('petsDB').collection('pets')
     const donationCollection = client.db('petsDB').collection('donations')
     const usersCollection = client.db('petsDB').collection('users')
+    const requestedCollection = client.db('petsDB').collection('requested')
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -67,7 +68,7 @@ async function run() {
       const result = await petCollection.find().toArray()
       res.send(result)
     })
-    app.post('/pets', async(req,res)=>{
+    app.post('/pets', async (req, res) => {
       const pet = req.body
       const result = await petCollection.insertOne(pet)
       res.send(result)
@@ -78,10 +79,33 @@ async function run() {
       const result = await petCollection.findOne(query)
       res.send(result)
     })
-    app.get('/addedpets',async(req,res)=>{
+    app.patch('/pets/:id', async (req, res) => {
+      const id = req.params
+      const updatedPet = req.body
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+
+          name: updatedPet.name,
+          age: updatedPet.age,
+          pet_location: updatedPet.pet_location,
+          image: updatedPet.image,
+          short_description: updatedPet.short_description,
+          long_description: updatedPet.long_description,
+          category: updatedPet.category,
+          adopted: updatedPet.adopted,
+          email: updatedPet.email,
+          AddedDate: updatedPet.AddedDate
+        }
+      }
+      const result = await petCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+    })
+
+    app.get('/addedpets', async (req, res) => {
       const email = req.query?.email
       console.log('email is', email)
-      const result = await petCollection.find({email}).toArray()
+      const result = await petCollection.find({ email }).toArray()
       res.send(result)
     })
 
@@ -95,11 +119,11 @@ async function run() {
       const id = req.params
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
-        $set:{
-          adopted:true
+        $set: {
+          adopted: true
         }
       }
-      const result = await petCollection.updateOne(filter,updatedDoc)
+      const result = await petCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
 
@@ -109,20 +133,61 @@ async function run() {
       const result = await donationCollection.find().toArray()
       res.send(result)
     })
-  app.get('/addedDonations', async(req,res)=>{
-    const email = req.query.email
-    const result = await donationCollection.find({email}).toArray()
-    res.send(result)
-  })
+    app.delete('/donations/:id', async (req, res) => {
+      const id = req.params
+      const query = { _id: new ObjectId(id) }
+      const result = await donationCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.get('/donations/:id', async (req, res) => {
+      const id = req.params
+      const query = { _id: new ObjectId(id) }
+      const result = await donationCollection.findOne(query)
+      res.send(result)
+    })
+    app.patch('/donations/:id', async (req, res) => {
+      const id = req.params
+      console.log('api hitted')
+      const updatedCampaign = req.body
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          max_donation_amount:updatedCampaign.max_donation_amount,
+          last_date:updatedCampaign.last_date,
+          image:updatedCampaign.image,
+          short_description:updatedCampaign.short_description,
+          long_description:updatedCampaign.long_description,
+          email:updatedCampaign.email,
+          AddedDate:updatedCampaign.AddedDate
+        }
+      }
+      const result = await donationCollection.updateOne(filter,updatedDoc)
+      res.send(result)
 
-    app.post('/donations', async (req,res)=>{
+    })
+    app.get('/addedDonations', async (req, res) => {
+      const email = req.query.email
+      const result = await donationCollection.find({ email }).toArray()
+      res.send(result)
+    })
+
+    app.post('/donations', async (req, res) => {
       const campaign = req.body
       const result = await donationCollection.insertOne(campaign)
       res.send(result)
     })
 
     // adoption request apis
-
+    app.post('/adoption/request', async(req,res)=>{
+      const requestedInfo = req.body
+      const result = await requestedCollection.insertOne(requestedInfo)
+      res.send(result)
+    })
+    app.get('/adoption/request', async(req,res)=>{
+      const email = req.query.email
+      const result = await requestedCollection.find({email}).toArray()
+      res.send(result)
+    })
 
 
     // users apis
@@ -144,12 +209,12 @@ async function run() {
           isAdmin: true
         }
       }
-      const result = await  usersCollection.updateOne(filter,updatedDoc)
+      const result = await usersCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
-    app.delete('/users/:id', verifyToken,async(req,res)=>{
+    app.delete('/users/:id', verifyToken, async (req, res) => {
       const id = req.params
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await usersCollection.deleteOne(query)
       res.send(result)
     })
