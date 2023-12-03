@@ -79,6 +79,12 @@ async function run() {
       const result = await petCollection.findOne(query)
       res.send(result)
     })
+    app.get('/pets/category/:category', async (req, res) => {
+      const category = req.params.category
+      console.log(category)
+      const result = await petCollection.find({category}).toArray()
+      res.send(result)
+    })
     app.patch('/pets/:id', async (req, res) => {
       const id = req.params
       const updatedPet = req.body
@@ -188,6 +194,42 @@ async function run() {
       const result = await requestedCollection.find({email}).toArray()
       res.send(result)
     })
+    app.put('/adoption/request/:id', async(req,res)=>{
+      const id = req.params
+      const filter = {_id: new ObjectId(id)}
+      const options = {upsert: true}
+      const updatedDoc = {
+        $set:{
+          status:'adopted'
+        }
+      }
+      const result = await requestedCollection.updateOne(filter,updatedDoc,options)
+      res.send(result)
+    })
+    app.patch('/adoption/request',async(req,res)=>{
+      const id = req.query
+      const filter = {_id: new ObjectId(id)}
+      const updatedDoc = {
+        $set:{
+          adopted:false
+        }
+      }
+      const result = await petCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+
+    })
+    app.delete('/adoption/request/:id',async(req,res)=>{
+      const id = req.params
+      const query = {_id: new ObjectId(id)}
+      const result = await requestedCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.get('/adoption/request/:id',async(req,res)=>{
+      const id = req.params
+      const query = {_id: new ObjectId(id)}
+      const result = await requestedCollection.findOne(query)
+      res.send(result)
+    })
 
 
     // users apis
@@ -216,6 +258,14 @@ async function run() {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await usersCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.get('/users/admin/:email',  async (req, res) => {
+      const email = req.params.email
+      console.log(email)
+      const query = {email}
+      console.log('query',query)
+      const result = await usersCollection.findOne(query)
       res.send(result)
     })
 
