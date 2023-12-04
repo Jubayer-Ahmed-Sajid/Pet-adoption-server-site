@@ -13,22 +13,8 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 
-//custom middlewares
-const verifyToken = async (req, res, next) => {
 
-  if (!req.headers.authorization) {
-    return res.status(401).send({ message: 'access unauthorized ' })
-  }
-  const token = req.headers.authorization.split(' ')[1];
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).send({ message: 'bad request' })
-    }
-    req.decoded = decoded;
-    next();
-  })
 
-}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -52,7 +38,7 @@ async function run() {
     const donationCollection = client.db('petsDB').collection('donations')
     const usersCollection = client.db('petsDB').collection('users')
     const requestedCollection = client.db('petsDB').collection('requested')
-
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     //jwt generation
@@ -63,10 +49,27 @@ async function run() {
       console.log('the token is ', token)
       res.send({ token })
     })
-   
+    
+    
+    //custom middlewares
+    const verifyToken = async (req, res, next) => {
+    
+      if (!req.headers.authorization) {
+        console.log(req.headers.authorization)
+        console.log('no headers found')
+        return res.status(401).send({ message: 'access unauthorized ' })
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          console.log(err)
+          return res.status(403).send({ message: 'bad request' })
+        }
+        req.decoded = decoded;
+        next();
+      })
 
-
-
+    }
 
 
     // pets apis
@@ -87,18 +90,19 @@ async function run() {
       const result = await petCollection.insertOne(pet)
       res.send(result)
     })
-    app.get('/pets/:id',verifyToken, async (req, res) => {
+    app.get('/pets/:category', async (req,res)=>{
+      const {category} = req.params
+      console.log('cetegory',category)
+      const result = await petCollection.find({category}).toArray()
+      res.send(result)
+    })
+    app.get('/pets/id/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await petCollection.findOne(query)
       res.send(result)
     })
-    app.get('/pets/category/:category',verifyToken, async (req, res) => {
-      const category = req.params.category
-      console.log(category)
-      const result = await petCollection.find({category}).toArray()
-      res.send(result)
-    })
+    
     app.patch('/pets/:id',verifyToken, async (req, res) => {
       const id = req.params
       const updatedPet = req.body
@@ -272,7 +276,7 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/users/admin/:id',verifyToken, verifyToken, async (req, res) => {
+    app.patch('/users/admin/:id',verifyToken, async (req, res) => {
       const id = req.params;
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
@@ -283,18 +287,15 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
-    app.delete('/users/:id',verifyToken, verifyToken, async (req, res) => {
+    app.delete('/users/:id',verifyToken, async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await usersCollection.deleteOne(query)
       res.send(result)
     })
     app.get('/users/admin/:email',verifyToken,  async (req, res) => {
-      const email = req.params.email
-      console.log(email)
-      const query = {email}
-      console.log('query',query)
-      const result = await usersCollection.findOne(query)
+      const{ email} = req.params.email
+      const result = await usersCollection.findOne(email)
       res.send(result)
     })
 
