@@ -3,6 +3,7 @@ const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const app = express()
+const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_SECRET)
 const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const port = process.env.PORT || 5000
@@ -62,11 +63,24 @@ async function run() {
       console.log('the token is ', token)
       res.send({ token })
     })
+   
+
+
+
+
+
     // pets apis
 
     app.get('/pets', async (req, res) => {
       const result = await petCollection.find().toArray()
       res.send(result)
+    })
+    app.get('/pets/search', async(req,res)=>{
+      const {name} = req.query
+      console.log(name)
+      const result = await petCollection.find({name}).toArray()
+      res.send(result)
+
     })
     app.post('/pets', async (req, res) => {
       const pet = req.body
@@ -182,6 +196,21 @@ async function run() {
       const result = await donationCollection.insertOne(campaign)
       res.send(result)
     })
+
+
+     // payments
+     app.post('/create-payment-intent', async(req,res)=>{
+      const {price }= req.body
+      const amount = parseInt(price*100)
+      console.log(amount)
+      const PaymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency:'usd',
+        payment_method_types: ['card']
+      });
+      res.send({clientSecret: PaymentIntent.client_secret,})
+    })
+
 
     // adoption request apis
     app.post('/adoption/request', async(req,res)=>{
