@@ -37,6 +37,7 @@ async function run() {
     const donationCollection = client.db('petsDB').collection('donations')
     const usersCollection = client.db('petsDB').collection('users')
     const requestedCollection = client.db('petsDB').collection('requested')
+    const favoriteCollection = client.db('petsDB').collection('favorites')
     
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -91,7 +92,6 @@ async function run() {
     })
     app.get('/pets/:category',verifyToken, async (req,res)=>{
       const {category} = req.params
-      console.log('cetegory',category)
       const result = await petCollection.find({category}).toArray()
       res.send(result)
     })
@@ -151,6 +151,27 @@ async function run() {
     })
 
 
+    // Favorite Pets api
+
+    app.post('/pets/favorites',verifyToken,async(req,res)=>{
+      
+      const favorites = req.body
+      console.log('api hitted')
+      const result = await favoriteCollection.insertOne(favorites)
+      res.send(result)
+    })
+    app.delete('/pets/favorites/:id',verifyToken,async(req,res)=>{
+      const {id} = req.params
+      const query ={_id: new ObjectId(id)}
+      const result = await favoriteCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.get('/pets/favorites/email',verifyToken,async(req,res)=>{
+      const {email} = req.query
+      console.log('favorite email is',email)
+      const result = await favoriteCollection.find({email}).toArray()
+      res.send(result)
+    })
     // Donation apis
     app.get('/donations',verifyToken, async (req, res) => {
       const result = await donationCollection.find().toArray()
