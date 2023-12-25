@@ -38,6 +38,7 @@ async function run() {
     const usersCollection = client.db('petsDB').collection('users')
     const requestedCollection = client.db('petsDB').collection('requested')
     const favoriteCollection = client.db('petsDB').collection('favorites')
+    const eventsCollection = client.db('petsDB').collection('events')
     
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -149,8 +150,15 @@ async function run() {
       const result = await petCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
+    // Events api
 
-
+    app.get('/pet/special/events',verifyToken, async (req,res)=>{
+      console.log('api hitted')
+      const result = await eventsCollection.find().toArray()
+      res.send(result)
+    })
+   
+    
     // Favorite Pets api
 
     app.post('/pets/favorites',verifyToken,async(req,res)=>{
