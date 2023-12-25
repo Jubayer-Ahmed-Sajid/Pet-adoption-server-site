@@ -43,67 +43,67 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     //jwt generation
-    app.post('/jwt', async (req, res) => {
-      const user = req.body
-      console.log('user email', user)
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1hr' })
-      console.log('the token is ', token)
-      res.send({ token })
-    })
+    // app.post('/jwt', async (req, res) => {
+    //   const user = req.body
+    //   console.log('user email', user)
+    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1hr' })
+    //   console.log('the token is ', token)
+    //   res.send({ token })
+    // })
     
     
-    //custom middlewares
-    const verifyToken = async (req, res, next) => {
+    // //custom middlewares
+    // const verifyToken = async (req, res, next) => {
     
-      if (!req.headers.authorization) {
-        console.log(req.headers.authorization)
-        console.log('no headers found')
-        return res.status(401).send({ message: 'access unauthorized ' })
-      }
-      const token = req.headers.authorization.split(' ')[1];
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          console.log(err)
-          return res.status(403).send({ message: 'bad request' })
-        }
-        req.decoded = decoded;
-        next();
-      })
+    //   if (!req.headers.authorization) {
+    //     console.log(req.headers.authorization)
+    //     console.log('no headers found')
+    //     return res.status(401).send({ message: 'access unauthorized ' })
+    //   }
+    //   const token = req.headers.authorization.split(' ')[1];
+    //   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    //     if (err) {
+    //       console.log(err)
+    //       return res.status(403).send({ message: 'bad request' })
+    //     }
+    //     req.decoded = decoded;
+    //     next();
+    //   })
 
-    }
+    // }
 
 
     // pets apis
 
-    app.get('/pets',verifyToken, async (req, res) => {
+    app.get('/pets', async (req, res) => {
       const result = await petCollection.find().toArray()
       res.send(result)
     })
-    app.get('/pets/search',verifyToken, async(req,res)=>{
+    app.get('/pets/search', async(req,res)=>{
       const {name} = req.query
       console.log(name)
       const result = await petCollection.find({name}).toArray()
       res.send(result)
 
     })
-    app.post('/pets',verifyToken, async (req, res) => {
+    app.post('/pets', async (req, res) => {
       const pet = req.body
       const result = await petCollection.insertOne(pet)
       res.send(result)
     })
-    app.get('/pets/:category',verifyToken, async (req,res)=>{
+    app.get('/pets/:category', async (req,res)=>{
       const {category} = req.params
       const result = await petCollection.find({category}).toArray()
       res.send(result)
     })
-    app.get('/pets/id/:id',verifyToken, async (req, res) => {
+    app.get('/pets/id/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await petCollection.findOne(query)
       res.send(result)
     })
     
-    app.patch('/pets/:id',verifyToken, async (req, res) => {
+    app.patch('/pets/:id', async (req, res) => {
       const id = req.params
       const updatedPet = req.body
       const filter = { _id: new ObjectId(id) }
@@ -126,20 +126,20 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/addedpets',verifyToken, async (req, res) => {
+    app.get('/addedpets', async (req, res) => {
       const email = req.query?.email
       console.log('email is', email)
       const result = await petCollection.find({ email }).toArray()
       res.send(result)
     })
 
-    app.delete('/pets/:id',verifyToken, async (req, res) => {
+    app.delete('/pets/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await petCollection.deleteOne(query)
       res.send(result)
     })
-    app.patch('/pets/admin/:id',verifyToken, async (req, res) => {
+    app.patch('/pets/admin/:id', async (req, res) => {
       const id = req.params
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
@@ -152,7 +152,7 @@ async function run() {
     })
     // Events api
 
-    app.get('/pet/special/events',verifyToken, async (req,res)=>{
+    app.get('/pet/special/events', async (req,res)=>{
       console.log('api hitted')
       const result = await eventsCollection.find().toArray()
       res.send(result)
@@ -161,43 +161,43 @@ async function run() {
     
     // Favorite Pets api
 
-    app.post('/pets/favorites',verifyToken,async(req,res)=>{
+    app.post('/pets/favorites',async(req,res)=>{
       
       const favorites = req.body
       console.log('api hitted')
       const result = await favoriteCollection.insertOne(favorites)
       res.send(result)
     })
-    app.delete('/pets/favorites/:id',verifyToken,async(req,res)=>{
+    app.delete('/pets/favorites/:id',async(req,res)=>{
       const {id} = req.params
       const query ={_id: new ObjectId(id)}
       const result = await favoriteCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/pets/favorites/email',verifyToken,async(req,res)=>{
+    app.get('/pets/favorites/email',async(req,res)=>{
       const {email} = req.query
       console.log('favorite email is',email)
       const result = await favoriteCollection.find({email}).toArray()
       res.send(result)
     })
     // Donation apis
-    app.get('/donations',verifyToken, async (req, res) => {
+    app.get('/donations', async (req, res) => {
       const result = await donationCollection.find().toArray()
       res.send(result)
     })
-    app.delete('/donations/:id',verifyToken, async (req, res) => {
+    app.delete('/donations/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await donationCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/donations/:id',verifyToken, async (req, res) => {
+    app.get('/donations/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await donationCollection.findOne(query)
       res.send(result)
     })
-    app.patch('/donations/:id',verifyToken, async (req, res) => {
+    app.patch('/donations/:id', async (req, res) => {
       const id = req.params
       console.log('api hitted')
       const updatedCampaign = req.body
@@ -217,13 +217,13 @@ async function run() {
       res.send(result)
 
     })
-    app.get('/addedDonations',verifyToken, async (req, res) => {
+    app.get('/addedDonations', async (req, res) => {
       const email = req.query.email
       const result = await donationCollection.find({ email }).toArray()
       res.send(result)
     })
 
-    app.post('/donations',verifyToken, async (req, res) => {
+    app.post('/donations', async (req, res) => {
       const campaign = req.body
       const result = await donationCollection.insertOne(campaign)
       res.send(result)
@@ -234,17 +234,17 @@ async function run() {
     
 
     // adoption request apis
-    app.post('/adoption/request',verifyToken, async(req,res)=>{
+    app.post('/adoption/request', async(req,res)=>{
       const requestedInfo = req.body
       const result = await requestedCollection.insertOne(requestedInfo)
       res.send(result)
     })
-    app.get('/adoption/request',verifyToken, async(req,res)=>{
+    app.get('/adoption/request', async(req,res)=>{
       const email = req.query.email
       const result = await requestedCollection.find({email}).toArray()
       res.send(result)
     })
-    app.put('/adoption/request/:id',verifyToken, async(req,res)=>{
+    app.put('/adoption/request/:id', async(req,res)=>{
       const id = req.params
       const filter = {_id: new ObjectId(id)}
       const options = {upsert: true}
@@ -256,7 +256,7 @@ async function run() {
       const result = await requestedCollection.updateOne(filter,updatedDoc,options)
       res.send(result)
     })
-    app.patch('/adoption/request',verifyToken,async(req,res)=>{
+    app.patch('/adoption/request',async(req,res)=>{
       const id = req.query
       const filter = {_id: new ObjectId(id)}
       const updatedDoc = {
@@ -268,13 +268,13 @@ async function run() {
       res.send(result)
 
     })
-    app.delete('/adoption/request/:id',verifyToken,async(req,res)=>{
+    app.delete('/adoption/request/:id',async(req,res)=>{
       const id = req.params
       const query = {_id: new ObjectId(id)}
       const result = await requestedCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/adoption/request/:id',verifyToken,async(req,res)=>{
+    app.get('/adoption/request/:id',async(req,res)=>{
       const id = req.params
       const query = {_id: new ObjectId(id)}
       const result = await requestedCollection.findOne(query)
@@ -288,12 +288,12 @@ async function run() {
       const result = await usersCollection.insertOne(user)
       res.send(result)
     })
-    app.get('/users',verifyToken, async (req, res) => {
+    app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
 
-    app.patch('/users/admin/:id',verifyToken, async (req, res) => {
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params;
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
@@ -304,14 +304,15 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
-    app.delete('/users/:id',verifyToken, async (req, res) => {
+    app.delete('/users/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id) }
       const result = await usersCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/users/admin/:email',verifyToken,  async (req, res) => {
+    app.get('/users/admin/:email',  async (req, res) => {
       const{ email} = req.params.email
+      
       const result = await usersCollection.findOne(email)
       res.send(result)
     })
