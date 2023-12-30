@@ -236,6 +236,19 @@ async function run() {
       res.send(result)
 
     })
+    app.patch('/donations/update/:id',async (req,res)=>{
+      const id = req.params
+      const {donatedAmount} = req.body
+      console.log('api of update donation is hitted',donatedAmount)
+      const filter = {_id: new ObjectId(id)}
+      const updatedDoc = {
+        $inc: {
+          donated_amount: donatedAmount,
+        }
+      }
+      const result = await donationCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    })
     app.get('/addedDonations', async (req, res) => {
       const email = req.query.email
       const result = await donationCollection.find({ email }).toArray()
