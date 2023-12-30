@@ -6,7 +6,7 @@ const app = express()
 const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const port = process.env.PORT || 5000
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 // built middlewares
 app.use(cors());
 app.use(cookieParser());
@@ -39,7 +39,8 @@ async function run() {
     const requestedCollection = client.db('petsDB').collection('requested')
     const favoriteCollection = client.db('petsDB').collection('favorites')
     const eventsCollection = client.db('petsDB').collection('events')
-    
+    const paymentsCollection = client.db('petsDB').collection('payments')
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     //jwt generation
@@ -50,11 +51,11 @@ async function run() {
     //   console.log('the token is ', token)
     //   res.send({ token })
     // })
-    
-    
+
+
     // //custom middlewares
     // const verifyToken = async (req, res, next) => {
-    
+
     //   if (!req.headers.authorization) {
     //     console.log(req.headers.authorization)
     //     console.log('no headers found')
@@ -71,7 +72,25 @@ async function run() {
     //   })
 
     // }
+    // Payments
 
+    app.post('/payments', async(req,res)=>{
+      const paymentInfo = req.body
+      const result =await paymentsCollection.insertOne(paymentInfo) 
+      res.send(result)
+    })
+    app.post('/create-payment-intent', async(req,res)=>{
+      const {price} = req.body
+      console.log(price)
+      const amount = parseInt(price * 100)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency:'usd',
+        payment_method_types:['card']
+        
+      })
+      res.send({clientSecret: paymentIntent.client_secret})
+    })
 
     // pets apis
 
@@ -79,10 +98,10 @@ async function run() {
       const result = await petCollection.find().toArray()
       res.send(result)
     })
-    app.get('/pets/search', async(req,res)=>{
-      const {name} = req.query
+    app.get('/pets/search', async (req, res) => {
+      const { name } = req.query
       console.log(name)
-      const result = await petCollection.find({name}).toArray()
+      const result = await petCollection.find({ name }).toArray()
       res.send(result)
 
     })
@@ -91,9 +110,9 @@ async function run() {
       const result = await petCollection.insertOne(pet)
       res.send(result)
     })
-    app.get('/pets/:category', async (req,res)=>{
-      const {category} = req.params
-      const result = await petCollection.find({category}).toArray()
+    app.get('/pets/:category', async (req, res) => {
+      const { category } = req.params
+      const result = await petCollection.find({ category }).toArray()
       res.send(result)
     })
     app.get('/pets/id/:id', async (req, res) => {
@@ -102,7 +121,7 @@ async function run() {
       const result = await petCollection.findOne(query)
       res.send(result)
     })
-    
+
     app.patch('/pets/:id', async (req, res) => {
       const id = req.params
       const updatedPet = req.body
@@ -152,32 +171,32 @@ async function run() {
     })
     // Events api
 
-    app.get('/pet/special/events', async (req,res)=>{
+    app.get('/pet/special/events', async (req, res) => {
       console.log('api hitted')
       const result = await eventsCollection.find().toArray()
       res.send(result)
     })
-   
-    
+
+
     // Favorite Pets api
 
-    app.post('/pets/favorites',async(req,res)=>{
-      
+    app.post('/pets/favorites', async (req, res) => {
+
       const favorites = req.body
       console.log('api hitted')
       const result = await favoriteCollection.insertOne(favorites)
       res.send(result)
     })
-    app.delete('/pets/favorites/:id',async(req,res)=>{
-      const {id} = req.params
-      const query ={_id: new ObjectId(id)}
+    app.delete('/pets/favorites/:id', async (req, res) => {
+      const { id } = req.params
+      const query = { _id: new ObjectId(id) }
       const result = await favoriteCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/pets/favorites/email',async(req,res)=>{
-      const {email} = req.query
-      console.log('favorite email is',email)
-      const result = await favoriteCollection.find({email}).toArray()
+    app.get('/pets/favorites/email', async (req, res) => {
+      const { email } = req.query
+      console.log('favorite email is', email)
+      const result = await favoriteCollection.find({ email }).toArray()
       res.send(result)
     })
     // Donation apis
@@ -204,16 +223,16 @@ async function run() {
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
         $set: {
-          max_donation_amount:updatedCampaign.max_donation_amount,
-          last_date:updatedCampaign.last_date,
-          image:updatedCampaign.image,
-          short_description:updatedCampaign.short_description,
-          long_description:updatedCampaign.long_description,
-          email:updatedCampaign.email,
-          AddedDate:updatedCampaign.AddedDate
+          max_donation_amount: updatedCampaign.max_donation_amount,
+          last_date: updatedCampaign.last_date,
+          image: updatedCampaign.image,
+          short_description: updatedCampaign.short_description,
+          long_description: updatedCampaign.long_description,
+          email: updatedCampaign.email,
+          AddedDate: updatedCampaign.AddedDate
         }
       }
-      const result = await donationCollection.updateOne(filter,updatedDoc)
+      const result = await donationCollection.updateOne(filter, updatedDoc)
       res.send(result)
 
     })
@@ -230,53 +249,53 @@ async function run() {
     })
 
 
-     // payments
-    
+    // payments
+
 
     // adoption request apis
-    app.post('/adoption/request', async(req,res)=>{
+    app.post('/adoption/request', async (req, res) => {
       const requestedInfo = req.body
       const result = await requestedCollection.insertOne(requestedInfo)
       res.send(result)
     })
-    app.get('/adoption/request', async(req,res)=>{
+    app.get('/adoption/request', async (req, res) => {
       const email = req.query.email
-      const result = await requestedCollection.find({email}).toArray()
+      const result = await requestedCollection.find({ email }).toArray()
       res.send(result)
     })
-    app.put('/adoption/request/:id', async(req,res)=>{
+    app.put('/adoption/request/:id', async (req, res) => {
       const id = req.params
-      const filter = {_id: new ObjectId(id)}
-      const options = {upsert: true}
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true }
       const updatedDoc = {
-        $set:{
-          status:'adopted'
+        $set: {
+          status: 'adopted'
         }
       }
-      const result = await requestedCollection.updateOne(filter,updatedDoc,options)
+      const result = await requestedCollection.updateOne(filter, updatedDoc, options)
       res.send(result)
     })
-    app.patch('/adoption/request',async(req,res)=>{
+    app.patch('/adoption/request', async (req, res) => {
       const id = req.query
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
-        $set:{
-          adopted:false
+        $set: {
+          adopted: false
         }
       }
-      const result = await petCollection.updateOne(filter,updatedDoc)
+      const result = await petCollection.updateOne(filter, updatedDoc)
       res.send(result)
 
     })
-    app.delete('/adoption/request/:id',async(req,res)=>{
+    app.delete('/adoption/request/:id', async (req, res) => {
       const id = req.params
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await requestedCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/adoption/request/:id',async(req,res)=>{
+    app.get('/adoption/request/:id', async (req, res) => {
       const id = req.params
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await requestedCollection.findOne(query)
       res.send(result)
     })
@@ -310,9 +329,9 @@ async function run() {
       const result = await usersCollection.deleteOne(query)
       res.send(result)
     })
-    app.get('/users/admin/:email',  async (req, res) => {
-      const{ email} = req.params.email
-      
+    app.get('/users/admin/:email', async (req, res) => {
+      const { email } = req.params.email
+
       const result = await usersCollection.findOne(email)
       res.send(result)
     })
