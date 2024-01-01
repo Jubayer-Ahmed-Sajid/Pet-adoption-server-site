@@ -9,12 +9,9 @@ const port = process.env.PORT || 5000
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 // built middlewares
 app.use(cors({
-  origin:['http://localhost:5173'],
+  origin:['https://pet-adaption-11a4b.web.app'],
   credentials:true,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  
 }));
 app.use(cookieParser());
 app.use(express.json());
@@ -76,6 +73,7 @@ async function run() {
         if(decoded){
           console.log('the decoded result is',decoded)
           req.user = decoded
+          next();
         }
       })
     //   if (!req.headers.authorization) {
