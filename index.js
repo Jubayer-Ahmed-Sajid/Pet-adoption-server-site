@@ -10,7 +10,11 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 // built middlewares
 app.use(cors({
   origin:['http://localhost:5173'],
-  credentials:true
+  credentials:true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(cookieParser());
 app.use(express.json());
