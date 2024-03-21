@@ -10,8 +10,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 // built middlewaresj
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    // origin: "https://pawsandhearts.surge.sh",
+    // origin: "http://localhost:5173",
+    origin: "https://pawsandhearts.surge.sh",
     credentials: true,
   })
 );
@@ -57,7 +57,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          sameSite: "Lax",
+          sameSite: "None",
           secure: true,
         })
         .send({ success: "token " });
