@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 // built middlewaresj
 app.use(cors({
-  origin:'https://pawsAndHearts.surge.sh',
+  origin:'https://pawsandhearts.surge.sh',
   credentials:true,
 
   
