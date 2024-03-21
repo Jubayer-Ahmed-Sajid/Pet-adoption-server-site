@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require ('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
@@ -7,10 +7,11 @@ const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const port = process.env.PORT || 5000
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
-// built middlewares
+// built middlewaresj
 app.use(cors({
-  origin:['https://pet-adaption-11a4b.web.app'],
+  origin:'https://pawsAndHearts.surge.sh',
   credentials:true,
+
   
 }));
 app.use(cookieParser());
@@ -50,11 +51,11 @@ async function run() {
     //jwt generation
     app.post('/jwt', async (req, res) => {
       const user = req.body
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1hr' })
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
       console.log('the token is ', token)
       res.cookie('token', token,{
         httpOnly:true,
-        sameSite:'none',
+        sameSite:'None',
         secure:true
       }).send({success :"token "})
     })
@@ -76,22 +77,11 @@ async function run() {
           next();
         }
       })
-    //   if (!req.headers.authorization) {
-    //     console.log(req.headers.authorization)
-    //     console.log('no headers found')
-    //     return res.status(401).send({ message: 'access unauthorized ' })
-    //   }
-    //   const token = req.headers.authorization.split(' ')[1];
-    //   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    //     if (err) {
-    //       console.log(err)
-    //       return res.status(403).send({ message: 'bad request' })
-    //     }
-    //     req.decoded = decoded;
-        next();
+   
+       
       }
 
-    // }
+
     // Payments
 
     app.post('/payments', async(req,res)=>{
@@ -351,7 +341,7 @@ async function run() {
       const result = await usersCollection.insertOne(user)
       res.send(result)
     })
-    app.get('/users',verifyToken, async (req, res) => {
+    app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
