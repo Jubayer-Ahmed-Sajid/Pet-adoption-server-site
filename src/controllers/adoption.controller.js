@@ -24,7 +24,7 @@ const getAdoptionRequests = async (req, res) => {
   try {
     const email = req.query.email;
     const query = email ? { $or: [{ email }, { requester_email: email }] } : {};
-    const result = await req.collections.requested.find(query).toArray();
+    const result = await req.collections.requested.find(query).sort({ createdAt: -1 }).toArray();
     res.send(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -67,6 +67,59 @@ const updateAdoptionRequestStatus = async (req, res) => {
 };
 
 /**
+ * Atomically approve an adoption request and update companion status to adopted.
+ */
+const approveAdoptionRequest = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = await req.collections.requested.findOne({ _id: new ObjectId(id) });
+    if (!request) return res.status(404).json({ error: "Adoption request not found" });
+
+    // Mark request as approved
+    await req.collections.requested.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "approved", approvedAt: new Date() } }
+    );
+
+    // If request contains pet_name or pet_id, mark pet as adopted
+    if (request.pet_id) {
+      try {
+        await req.collections.pets.updateOne(
+          { _id: new ObjectId(request.pet_id) },
+          { $set: { adopted: true, adoptedBy: request.requester_email || request.email } }
+        );
+      } catch (e) {}
+    }
+    if (request.pet_name) {
+      await req.collections.pets.updateOne(
+        { name: request.pet_name },
+        { $set: { adopted: true, adoptedBy: request.requester_email || request.email } }
+      );
+    }
+
+    res.json({ success: true, message: "Adoption approved and companion marked as adopted." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * Reject an adoption request.
+ */
+const rejectAdoptionRequest = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await req.collections.requested.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "rejected", rejectedAt: new Date() } }
+    );
+    res.json({ success: true, message: "Adoption request rejected." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * Mark pet as adopted through adoption request query (?id=...).
  */
 const markPetAdoptedFromRequest = async (req, res) => {
@@ -104,6 +157,8 @@ module.exports = {
   getAdoptionRequests,
   getAdoptionRequestById,
   updateAdoptionRequestStatus,
+  approveAdoptionRequest,
+  rejectAdoptionRequest,
   markPetAdoptedFromRequest,
   deleteAdoptionRequest,
 };

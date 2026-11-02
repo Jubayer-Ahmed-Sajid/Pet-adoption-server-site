@@ -10,3 +10,4 @@ router.post("/contact-messages", ensureDB, createContactMessage);
 router.get("/contact-messages", ensureDB, getContactMessages);
 
 module.exports = router;
+

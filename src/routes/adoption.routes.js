@@ -5,6 +5,8 @@ const {
   getAdoptionRequests,
   getAdoptionRequestById,
   updateAdoptionRequestStatus,
+  approveAdoptionRequest,
+  rejectAdoptionRequest,
   markPetAdoptedFromRequest,
   deleteAdoptionRequest,
 } = require("../controllers/adoption.controller");
@@ -13,6 +15,10 @@ const { ensureDB } = require("../middlewares/db.middleware");
 router.post("/adoption/request", ensureDB, createAdoptionRequest);
 router.get("/adoption/request", ensureDB, getAdoptionRequests);
 router.patch("/adoption/request", ensureDB, markPetAdoptedFromRequest);
+
+router.post("/adoption/request/:id/approve", ensureDB, approveAdoptionRequest);
+router.post("/adoption/request/:id/reject", ensureDB, rejectAdoptionRequest);
+
 router.get("/adoption/request/:id", ensureDB, getAdoptionRequestById);
 router.put("/adoption/request/:id", ensureDB, updateAdoptionRequestStatus);
 router.delete("/adoption/request/:id", ensureDB, deleteAdoptionRequest);

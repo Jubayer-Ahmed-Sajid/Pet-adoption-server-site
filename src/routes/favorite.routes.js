@@ -13,3 +13,4 @@ router.post("/pets/favorites", ensureDB, addFavorite);
 router.delete("/pets/favorites/:id", ensureDB, removeFavorite);
 
 module.exports = router;
+

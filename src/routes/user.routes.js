@@ -22,3 +22,4 @@ router.patch("/users/:id", ensureDB, makeAdmin);
 router.delete("/users/:id", ensureDB, deleteUser);
 
 module.exports = router;
+

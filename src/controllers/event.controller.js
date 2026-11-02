@@ -13,3 +13,4 @@ const getSpecialEvents = async (req, res) => {
 module.exports = {
   getSpecialEvents,
 };
+

@@ -6,3 +6,4 @@ router.post("/jwt", generateToken);
 router.post("/logout", logout);
 
 module.exports = router;
+

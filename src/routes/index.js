@@ -23,3 +23,4 @@ router.use(eventRoutes);
 router.use(contactRoutes);
 
 module.exports = router;
+

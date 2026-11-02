@@ -7,3 +7,4 @@ router.get("/health", getHealth);
 router.get("/stats", ensureDB, getPlatformStats);
 
 module.exports = router;
+

@@ -6,3 +6,4 @@ const { ensureDB } = require("../middlewares/db.middleware");
 router.get("/pet/special/events", ensureDB, getSpecialEvents);
 
 module.exports = router;
+

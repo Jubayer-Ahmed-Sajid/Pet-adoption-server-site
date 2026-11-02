@@ -123,13 +123,37 @@ const createPaymentIntent = async (req, res) => {
 };
 
 /**
- * Record a successful payment in the payments collection.
+ * Record a successful payment in the payments collection and update campaign progress.
  */
 const recordPayment = async (req, res) => {
   try {
-    const paymentInfo = req.body;
+    const paymentInfo = {
+      ...req.body,
+      createdAt: new Date(),
+    };
     const result = await req.collections.payments.insertOne(paymentInfo);
-    res.send(result);
+
+    // Atomically increment campaign raised amount and donor count if campaign ID is provided
+    const campaignId = paymentInfo.campaign_id || paymentInfo.donation_id || paymentInfo.campaignId;
+    const amount = Number(paymentInfo.donated_amount || paymentInfo.amount || paymentInfo.price || 0);
+
+    if (campaignId && amount > 0) {
+      try {
+        await req.collections.donations.updateOne(
+          { _id: new ObjectId(campaignId) },
+          {
+            $inc: {
+              donated_amount: amount,
+              donor_count: 1,
+            },
+          }
+        );
+      } catch (e) {
+        console.warn("Could not auto-increment donation campaign:", e.message);
+      }
+    }
+
+    res.send({ ...result, insertedPayment: paymentInfo });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -145,3 +169,4 @@ module.exports = {
   createPaymentIntent,
   recordPayment,
 };
+
